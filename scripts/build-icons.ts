@@ -22,6 +22,8 @@ for (const lib of libs) {
   for (let [key, value] of Object.entries(require(lib))) {
     if (name === "fa6") {
       key = key.replace(/^Fa/, "Fa6");
+    } else if (name === "hi2") {
+      key = key.replace(/^Hi/, "Hi2");
     }
 
     icons.write(`export const ${key} = ${JSON.stringify((value as any)())};\n`);

@@ -1,6 +1,6 @@
 {
   "name": "@aet/icons",
-  "version": "0.0.1-beta.2",
+  "version": "0.0.1-beta.5",
   "description": "react-icons repackaged",
   "main": "index.js",
   "private": true,
