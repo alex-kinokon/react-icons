@@ -7,9 +7,12 @@ export interface IconTree {
 }
 
 function fromTree(tree: IconTree[]): React.ReactElement[] {
-  return tree?.map((node, i) =>
-    React.createElement(node.tag, { key: i, ...node.attr }, fromTree(node.child))
-  );
+  return tree?.map(({ tag: Tag, attr, child }, i) => (
+    // @ts-expect-error
+    <Tag key={i} {...attr}>
+      {fromTree(child)}
+    </Tag>
+  ));
 }
 
 export interface IconProps extends React.SVGAttributes<SVGElement> {
