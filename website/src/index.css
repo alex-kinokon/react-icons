@@ -1,0 +1,26 @@
+body {
+  font-family: system-ui;
+  margin: 0;
+  line-height: 1.4;
+}
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+input {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-family: inherit;
+  color: inherit;
+  padding: 0.3em 0.5em;
+}
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #222;
+    color: #fff;
+  }
+  input {
+    border-color: #444;
+  }
+}

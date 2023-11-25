@@ -1,14 +1,15 @@
 import { createMacro } from "babel-plugin-macros";
+import { memoize } from "lodash";
 import type { NodePath } from "@babel/core";
 import type {
-  Program,
-  ImportSpecifier,
   Expression,
-  StringLiteral,
+  ImportSpecifier,
   JSXOpeningElement,
+  Program,
+  StringLiteral,
 } from "@babel/types";
 
-const { name } = [require][0]("./package.json") as { name: string };
+const name = process.env.PACKAGE_NAME!;
 
 export default createMacro(({ references, babel: { types: t } }) => {
   const { default: defaultImport = [] } = references;
@@ -19,39 +20,45 @@ export default createMacro(({ references, babel: { types: t } }) => {
   ) as NodePath<Program>;
 
   const iconComponent = programPath.scope.generateUid("Icon");
-  const specs: ImportSpecifier[] = [];
-  programPath.node.body.unshift(
-    t.importDeclaration(
-      [t.importSpecifier(t.identifier(iconComponent), t.identifier("Icon"))],
-      t.stringLiteral(name)
-    ),
-    t.importDeclaration(specs, t.stringLiteral(`${name}/icons`))
-  );
 
-  function replaceLiteral(string: StringLiteral) {
+  const getImportDeclarations = memoize((category: string) => {
+    const specs: ImportSpecifier[] = [];
+    programPath.node.body.unshift(
+      t.importDeclaration(
+        [t.importSpecifier(t.identifier(iconComponent), t.identifier("Icon"))],
+        t.stringLiteral(name)
+      ),
+      t.importDeclaration(specs, t.stringLiteral(`${name}/icons/${category}`))
+    );
+    return specs;
+  });
+
+  const replaceLiteral = memoize((string: StringLiteral) => {
+    const prefix = string.value.match(/^[A-Z][a-z]+/)?.[0].toLowerCase();
+    const specs = getImportDeclarations(prefix ?? "icons");
     const newId = programPath.scope.generateUid(string.value);
     specs.push(t.importSpecifier(t.identifier(newId), t.identifier(string.value)));
     return t.identifier(newId);
-  }
+  });
 
-  function check(exp: Expression): Expression {
+  function replaceExpression(exp: Expression): Expression {
     if (t.isConditionalExpression(exp)) {
-      exp.consequent = check(exp.consequent);
-      exp.alternate = check(exp.alternate);
+      exp.consequent = replaceExpression(exp.consequent);
+      exp.alternate = replaceExpression(exp.alternate);
     } else if (t.isStringLiteral(exp)) {
-      return replaceLiteral(exp);
+      return t.cloneNode(replaceLiteral(exp));
     }
     return exp;
   }
 
-  function handle(parent: JSXOpeningElement) {
+  function replaceIconAttribute(parent: JSXOpeningElement) {
     for (const attr of parent.attributes) {
       if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name, { name: "icon" })) {
         const value = attr.value;
         if (t.isJSXExpressionContainer(value)) {
-          value.expression = check(value.expression as Expression);
+          value.expression = replaceExpression(value.expression as Expression);
         } else if (t.isStringLiteral(value)) {
-          attr.value = t.jsxExpressionContainer(replaceLiteral(value));
+          attr.value = t.jsxExpressionContainer(t.cloneNode(replaceLiteral(value)));
         }
       }
     }
@@ -78,7 +85,9 @@ export default createMacro(({ references, babel: { types: t } }) => {
               [
                 t.jsxAttribute(
                   t.jsxIdentifier("icon"),
-                  t.jsxExpressionContainer(replaceLiteral(grandparent.node.arguments[0]))
+                  t.jsxExpressionContainer(
+                    t.cloneNode(replaceLiteral(grandparent.node.arguments[0]))
+                  )
                 ),
                 t.jsxSpreadAttribute(props),
               ],
@@ -103,10 +112,10 @@ export default createMacro(({ references, babel: { types: t } }) => {
       grandparent.scope.bindings[id].referencePaths
         .map(path => path.parentPath)
         .filter(path => t.isJSXOpeningElement(path?.node))
-        .forEach(path => handle(path!.node as JSXOpeningElement));
+        .forEach(path => replaceIconAttribute(path!.node as JSXOpeningElement));
     } else if (t.isJSXOpeningElement(parent)) {
       parent.name = t.jsxIdentifier(iconComponent);
-      handle(parent);
+      replaceIconAttribute(parent);
     } else {
       throw new Error("Unexpected usage of icon macro");
     }

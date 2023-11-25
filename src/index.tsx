@@ -8,7 +8,7 @@ export interface IconTree {
 
 function fromTree(tree: IconTree[]): React.ReactElement[] {
   return tree?.map(({ tag: Tag, attr, child }, i) => (
-    // @ts-expect-error
+    // @ts-expect-error `children` missing in props
     <Tag key={i} {...attr}>
       {fromTree(child)}
     </Tag>
@@ -43,7 +43,7 @@ export function Icon(props: IconProps): React.ReactElement {
       xmlns="http://www.w3.org/2000/svg"
     >
       {title != null && <title>{title}</title>}
-      {fromTree(icon.child)}
+      <>{fromTree(icon.child)}</>
     </svg>
   );
 }

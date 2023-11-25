@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "jsx": "react-jsx",
-    "module": "commonjs",
+    "module": "esnext",
     "moduleResolution": "node",
     "noImplicitOverride": true,
     "noUnusedLocals": true,
@@ -15,6 +15,5 @@
     "stripInternal": true,
     "target": "esnext",
     "useUnknownInCatchVariables": false
-  },
-  "include": ["src", ".eslintrc.js", "scripts", "repl.tsx"]
+  }
 }

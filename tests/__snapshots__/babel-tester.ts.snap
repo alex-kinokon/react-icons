@@ -1,0 +1,34 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`macros 1. macros: 1. macros 1`] = `
+"
+
+import Icon from "react-icons/macro";
+<Icon icon="FcAcceptDatabase" />;
+    
+
+      ↓ ↓ ↓ ↓ ↓ ↓
+
+import { Icon as _Icon } from "react-icons";
+import { FcAcceptDatabase as _FcAcceptDatabase } from "react-icons/icons/fc";
+<_Icon icon={_FcAcceptDatabase} />;
+"
+`;
+
+exports[`macros 2. macros: 2. macros 1`] = `
+"
+
+import Icon from "react-icons/macro";
+<Icon icon={process.env.TEST ? "FcAcceptDatabase" : "FcAddDatabase"} />;
+    
+
+      ↓ ↓ ↓ ↓ ↓ ↓
+
+import { Icon as _Icon } from "react-icons";
+import {
+  FcAcceptDatabase as _FcAcceptDatabase,
+  FcAddDatabase as _FcAddDatabase,
+} from "react-icons/icons/fc";
+<_Icon icon={process.env.TEST ? _FcAcceptDatabase : _FcAddDatabase} />;
+"
+`;
