@@ -2,11 +2,13 @@
   "name": "@aet/icons",
   "version": "0.0.1-beta.6",
   "description": "react-icons repackaged",
+  "homepage": "https://alex-kinokon.github.io/react-icons/",
   "main": "index.js",
   "private": true,
   "scripts": {
     "test": "bun test",
-    "build": "./scripts/build.sh"
+    "build": "./scripts/build.sh",
+    "deploy": "gh-pages -d website/dist"
   },
   "keywords": [],
   "author": "",
