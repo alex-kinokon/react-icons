@@ -112,6 +112,7 @@ Error generating stack: `+o.message+`
                 }
               `)}),R.jsxs("code",{className:fe`
               font-size: 0.8em;
+              text-align: left;
             `,children:[n.name,n.name.toLowerCase().startsWith(n.package)||R.jsx("span",{className:fe`
                   filter: opacity(0.5);
                 `,children:` (${n.package})`})]})]},n.package+"_"+n.name))})}function H0({search:e,icons:t}){return R.jsxs("div",{children:[R.jsx("h1",{children:"Search"}),R.jsx("div",{className:fe`
