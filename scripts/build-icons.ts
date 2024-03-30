@@ -5,8 +5,12 @@ import JSON5 from "json5";
 
 fs.mkdirSync("./dist/icons", { recursive: true });
 
+const define = Object.defineProperty;
+Object.defineProperty = (obj, prop, value) =>
+  define(obj, prop, { ...value, configurable: true });
 const iconBase = require("react-icons/lib");
-iconBase.GenIcon = (icon: unknown) => () => icon;
+Object.defineProperty = define;
+Object.defineProperty(iconBase, "GenIcon", { value: (icon: unknown) => () => icon });
 
 const libs = glob.sync("react-icons/*/index.js", { cwd: "./node_modules" });
 
