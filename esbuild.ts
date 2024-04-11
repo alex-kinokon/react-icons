@@ -3,18 +3,18 @@ import esbuild, { type BuildOptions } from "esbuild";
 import { name } from "./package.json";
 
 const args = process.argv.slice(2);
-const ENV = process.env.NODE_ENV || "development";
-const PROD = ENV === "production";
+const ENV = process.env.NODE_ENV || "production";
 
 async function main() {
   const shared: BuildOptions = {
     outdir: "dist",
     bundle: true,
-    minify: PROD,
+    minify: false,
     platform: "node",
     format: "esm",
     packages: "external",
     plugins: [],
+    treeShaking: true,
     define: {
       "process.env.NODE_ENV": JSON.stringify(ENV),
       "process.env.PACKAGE_NAME": JSON.stringify(name),

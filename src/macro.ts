@@ -10,6 +10,7 @@ import type {
   Program,
   StringLiteral,
 } from "@babel/types";
+import { iconMap } from "./iconList";
 
 const name = process.env.PACKAGE_NAME!;
 
@@ -36,7 +37,7 @@ export default createMacro(({ references, babel: { types: t } }) => {
   });
 
   const importIcon = memoize((string: StringLiteral) => {
-    const prefix = string.value.match(/^[A-Z][a-z]+/)?.[0].toLowerCase();
+    const prefix = iconMap.get(string.value);
     const specs = getImportDeclarations(prefix ?? "icons");
     const newId = programPath.scope.generateUid(string.value);
     specs.push(t.importSpecifier(t.identifier(newId), t.identifier(string.value)));

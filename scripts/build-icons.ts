@@ -16,7 +16,20 @@ const libs = glob.sync("react-icons/*/index.js", { cwd: "./node_modules" });
 
 const index = fs.createWriteStream("./dist/all.js");
 const indexDefs = fs.createWriteStream("./dist/all.d.ts");
-const iconListList: [string, string[]][] = [];
+
+interface IconTree {
+  tag: string;
+  attr: { [key: string]: string };
+  child?: IconTree[];
+}
+
+function modify(icon: IconTree): any[] {
+  const result: any[] = [icon.tag, icon.attr];
+  if (icon.child?.length) {
+    result.push(...icon.child.map(modify));
+  }
+  return result;
+}
 
 for (const lib of libs) {
   if (lib === "react-icons/lib/index.js") continue;
@@ -36,7 +49,8 @@ for (const lib of libs) {
       key = key.replace(/^Hi/, "Hi2");
     }
 
-    icons.write(`export const ${key} = ${JSON5.stringify((value as any)())};\n`);
+    const [, attr, ...children] = modify((value as () => any)());
+    icons.write(`export const ${key} = ${JSON5.stringify([attr, children])};\n`);
     defs.write(`export const ${key}: IconTree;\n`);
     iconList.push(key);
   }
@@ -46,10 +60,7 @@ for (const lib of libs) {
 
   index.write(`export * from "./icons/${name}";\n`);
   indexDefs.write(`export * from "./icons/${name}";\n`);
-  iconListList.push([name, iconList]);
 }
-
-// fs.writeFileSync("website/src/iconList.json", JSON.stringify(iconListList, null, 2));
 
 index.end();
 indexDefs.end();

@@ -1,18 +1,25 @@
 import React from "react";
 
-export interface IconTree {
-  tag: string;
-  attr: { [key: string]: string };
-  child: IconTree[];
-}
+export type SubIconTree = [
+  tag: string,
+  attributes: { [key: string]: string },
+  ...children: SubIconTree[],
+];
 
-function fromTree(tree: IconTree[]): React.ReactElement[] {
-  return tree?.map(({ tag: Tag, attr, child }, i) => (
-    // @ts-expect-error `children` missing in props
-    <Tag key={i} {...attr}>
-      {fromTree(child)}
-    </Tag>
-  ));
+export type IconTree = [
+  attributes: { [key: string]: string }, //
+  children: SubIconTree[],
+];
+
+function fromTree(tree?: SubIconTree[]): React.ReactElement[] | null {
+  return (
+    tree?.map(([Tag, attr, ...children], i) => (
+      // @ts-expect-error `children` missing in props
+      <Tag key={i} {...attr}>
+        {fromTree(children)}
+      </Tag>
+    )) ?? null
+  );
 }
 
 export interface IconProps extends React.SVGAttributes<SVGElement> {
@@ -31,7 +38,7 @@ export function Icon(props: IconProps): React.ReactElement {
       stroke="currentColor"
       fill="currentColor"
       strokeWidth="0"
-      {...icon.attr}
+      {...icon[0]}
       {...rest}
       style={{
         color: props.color,
@@ -42,7 +49,7 @@ export function Icon(props: IconProps): React.ReactElement {
       xmlns="http://www.w3.org/2000/svg"
     >
       {title != null && <title>{title}</title>}
-      <>{fromTree(icon.child)}</>
+      <>{fromTree(icon[1])}</>
     </svg>
   );
 }

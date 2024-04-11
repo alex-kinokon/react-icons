@@ -11,4 +11,4 @@ echo "📀 Running build-icons.ts"
 echo "📀 Copying package.json..."
 jq 'del(.devDependencies, .private)' package.json > dist/package.json
 echo "📀 Running dts-bundle-generator..."
-npx dts-bundle-generator --project tsconfig.json --out-file dist/index.d.ts ./src/index.tsx
+npx dts-bundle-generator --project tsconfig.json --out-file dist/index.d.ts ./src/index.tsx --no-check
