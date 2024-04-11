@@ -193,16 +193,16 @@ function IconPage({ icons }: { icons: IconDefinition }) {
         </pre>
       </div>
 
-      <IconList>{list}</IconList>
+      <IconList list={list} />
     </div>
   );
 }
 
 function IconList({
-  children: list,
+  list: list,
   onSelect,
 }: {
-  children: IconEntry[];
+  list: IconEntry[];
   onSelect?: (icon: IconEntry) => void;
 }) {
   return (
@@ -257,6 +257,7 @@ function IconList({
                   }
                 `,
               css`
+                min-width: 1em;
                 &:hover {
                   background: #eee;
                   border-radius: 3px;
@@ -304,7 +305,7 @@ function SearchPage({ search, icons }: { search: string; icons: IconEntry[] }) {
           Keyword: {search.replaceAll("%20", " ")} ({icons.length} results)
         </div>
       </div>
-      <IconList>{icons}</IconList>
+      <IconList list={icons} />
     </div>
   );
 }

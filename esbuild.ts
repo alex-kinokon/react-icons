@@ -29,6 +29,7 @@ async function main() {
       }),
       await esbuild.context({
         ...shared,
+        format: "cjs",
         entryPoints: ["./src/macro.ts"],
       }),
     ].map(async context => {

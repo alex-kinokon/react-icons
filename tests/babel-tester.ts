@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 /* eslint-disable rules/restrict-template-expressions */
-// https://github.com/babel-utils/babel-plugin-tester/commit/874cb1896ac96c7e803bc56d2a5886a344f925ff
-/// <reference types="bun-types" />
+// https://github.com/babel-utils/babel-plugin-tester/commit/6ba536698834b206acae4d90f324e394a3a47989
 import path from "node:path";
 import fs from "node:fs";
 import assert from "node:assert";
@@ -70,7 +69,7 @@ const ErrorMessage = {
   ExpectedErrorToMatchRegExp: (resultString: string, expectedError: RegExp) =>
     `expected "${resultString}" to match ${expectedError}`,
   BabelOutputTypeIsNotString: (rawBabelOutput: unknown) =>
-    `unexpected babel output type "${typeof rawBabelOutput}" (expected string)`,
+    `unexpected babel output of type "${typeof rawBabelOutput}" (expected 'code' property to be of type "string")`,
   BabelOutputUnexpectedlyEmpty: () =>
     "attempted to execute babel output but it was empty. An empty string cannot be evaluated",
   AttemptedToSnapshotUnmodifiedBabelOutput: () =>
@@ -108,6 +107,8 @@ const ErrorMessage = {
     testConfig[$type] === "test-object"
       ? "neither `output` nor `outputFixture` can be provided with `throws` or `error`"
       : "a fixture cannot be provided with `throws` or `error` and also contain an output file",
+  InvalidHasThrowsAndOutputRaw: () =>
+    "`outputRaw` cannot be provided with `throws` or `error`",
   InvalidHasThrowsAndExec: (
     testConfig: Pick<MaybePluginTesterTestConfig, typeof $type>
   ) =>
@@ -1479,10 +1480,10 @@ function getAbsolutePathUsingFilepathDirname(filepath?: string, basename?: strin
   const result = !basename
     ? undefined
     : path.isAbsolute(basename)
-    ? basename
-    : filepath
-    ? path.join(path.dirname(filepath), basename)
-    : undefined;
+      ? basename
+      : filepath
+        ? path.join(path.dirname(filepath), basename)
+        : undefined;
 
   verbose2(`dirname(${filepath}) + ${basename} => ${result}`);
   return result;
@@ -1769,7 +1770,7 @@ const prettierFormatter: ResultFormatter<{
   debugFormatter("prettier options: %O", finalPrettierOptions);
   debugFormatter("original code: %O", code);
 
-  const formattedCode = formatWithPrettier(code, finalPrettierOptions);
+  const formattedCode = await formatWithPrettier(code, finalPrettierOptions);
   debugFormatter("formatted code: %O", code);
 
   return formattedCode;
@@ -1858,6 +1859,13 @@ type SetupFunction = () => Promisable<void | TeardownFunction>;
  * @see https://npm.im/babel-plugin-tester#teardown
  */
 type TeardownFunction = () => Promisable<void>;
+
+/**
+ * The shape of an `outputRaw` test object or fixture option.
+ *
+ * @see https://npm.im/babel-plugin-tester#outputraw
+ */
+export type OutputTesterFunction = (output: Babel.BabelFileResult) => Promisable<void>;
 
 /**
  * Options passed as parameters to the `pluginTester` function.
@@ -2022,6 +2030,18 @@ export interface PluginTesterOptions {
    * @see https://npm.im/babel-plugin-tester#formatResult
    */
   formatResult?: ResultFormatter;
+  /**
+   * This is a `fixtures` option similar in intent to `output.js` except it
+   * tests against the entire `BabelFileResult` object returned by babel's
+   * `transform` function instead of only the `code` property of
+   * `BabelFileResult`.
+   *
+   * As it requires a function value, this option must be used in `options.js`
+   * instead of `options.json`.
+   *
+   * @see https://npm.im/babel-plugin-tester#outputRaw
+   */
+  outputRaw?: OutputTesterFunction;
   /**
    * This is a `pluginTester` option for when you prefer to take a snapshot of
    * all test object outputs rather than compare it to something you hard-code.
@@ -2416,6 +2436,15 @@ interface TestObject {
    */
   output?: string;
   /**
+   * This is a `tests` object option similar in intent to the `output` option
+   * except it tests against the entire `BabelFileResult` object returned by
+   * babel's `transform` function instead of only the `code` property of
+   * `BabelFileResult`.
+   *
+   * @see https://npm.im/babel-plugin-tester#outputRaw-1
+   */
+  outputRaw?: OutputTesterFunction;
+  /**
    * This is a `tests` object option that will be transformed just like the
    * `code` property, except the output will be _evaluated_ in the same context
    * as the the test runner itself, meaning it has access to `expect`,
@@ -2574,6 +2603,7 @@ type PluginTesterSharedTestConfigProperties = {
   only?: TestObject["only"];
   skip?: TestObject["skip"];
   expectedError?: TestObject["throws"];
+  outputRaw?: TestObject["outputRaw"];
   testSetup: NonNullable<PluginTesterOptions["setup"]>;
   testTeardown: NonNullable<PluginTesterOptions["teardown"]>;
   formatResult: NonNullable<PluginTesterOptions["formatResult"]>;

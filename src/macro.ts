@@ -2,9 +2,11 @@ import { createMacro } from "babel-plugin-macros";
 import { memoize } from "lodash";
 import type { NodePath } from "@babel/core";
 import type {
+  CallExpression,
   Expression,
   ImportSpecifier,
   JSXOpeningElement,
+  ObjectProperty,
   Program,
   StringLiteral,
 } from "@babel/types";
@@ -33,7 +35,7 @@ export default createMacro(({ references, babel: { types: t } }) => {
     return specs;
   });
 
-  const replaceLiteral = memoize((string: StringLiteral) => {
+  const importIcon = memoize((string: StringLiteral) => {
     const prefix = string.value.match(/^[A-Z][a-z]+/)?.[0].toLowerCase();
     const specs = getImportDeclarations(prefix ?? "icons");
     const newId = programPath.scope.generateUid(string.value);
@@ -46,7 +48,7 @@ export default createMacro(({ references, babel: { types: t } }) => {
       exp.consequent = replaceExpression(exp.consequent);
       exp.alternate = replaceExpression(exp.alternate);
     } else if (t.isStringLiteral(exp)) {
-      return t.cloneNode(replaceLiteral(exp));
+      return t.cloneNode(importIcon(exp));
     }
     return exp;
   }
@@ -58,7 +60,7 @@ export default createMacro(({ references, babel: { types: t } }) => {
         if (t.isJSXExpressionContainer(value)) {
           value.expression = replaceExpression(value.expression as Expression);
         } else if (t.isStringLiteral(value)) {
-          attr.value = t.jsxExpressionContainer(t.cloneNode(replaceLiteral(value)));
+          attr.value = t.jsxExpressionContainer(t.cloneNode(importIcon(value)));
         }
       }
     }
@@ -67,32 +69,58 @@ export default createMacro(({ references, babel: { types: t } }) => {
   for (const referencePath of defaultImport) {
     const grandparent = referencePath.parentPath?.parentPath;
     const parent = referencePath.parent;
+    let args: CallExpression["arguments"];
+
     if (
       t.isMemberExpression(parent) &&
       t.isIdentifier(parent.property, { name: "of" }) &&
       grandparent &&
       t.isCallExpression(grandparent.node) &&
-      grandparent.node.arguments.length === 1 &&
-      t.isStringLiteral(grandparent.node.arguments[0])
+      ((args = grandparent.node.arguments).length === 1 || args.length === 2) &&
+      t.isStringLiteral(args[0])
     ) {
       const props = t.identifier("props");
+      const [arg0, arg1] = args;
+      const attributes: JSXOpeningElement["attributes"] = [
+        t.jsxAttribute(
+          t.jsxIdentifier("icon"),
+          t.jsxExpressionContainer(t.cloneNode(importIcon(arg0)))
+        ),
+      ];
+      if (args.length === 2) {
+        // Common case: the second argument is a plain object literal
+        if (
+          t.isObjectExpression(arg1) &&
+          arg1.properties.every(
+            prop =>
+              t.isObjectProperty(prop) &&
+              (t.isIdentifier(prop.key) || t.isStringLiteral(prop.key)) &&
+              t.isExpression(prop.value)
+          )
+        ) {
+          for (const { key, value } of arg1.properties as ObjectProperty[]) {
+            attributes.push(
+              t.jsxAttribute(
+                t.jsxIdentifier(
+                  t.isIdentifier(key) ? key.name : (key as StringLiteral).value
+                ),
+                t.isStringLiteral(value)
+                  ? value
+                  : t.jsxExpressionContainer(value as Expression)
+              )
+            );
+          }
+        } else {
+          attributes.push(t.jsxSpreadAttribute(arg1 as Expression));
+        }
+      }
+      attributes.push(t.jsxSpreadAttribute(props));
+
       grandparent.replaceWith(
         t.arrowFunctionExpression(
           [props],
           t.jsxElement(
-            t.jsxOpeningElement(
-              t.jsxIdentifier(iconComponent),
-              [
-                t.jsxAttribute(
-                  t.jsxIdentifier("icon"),
-                  t.jsxExpressionContainer(
-                    t.cloneNode(replaceLiteral(grandparent.node.arguments[0]))
-                  )
-                ),
-                t.jsxSpreadAttribute(props),
-              ],
-              true
-            ),
+            t.jsxOpeningElement(t.jsxIdentifier(iconComponent), attributes, true),
             null,
             [],
             true

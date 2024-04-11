@@ -25,7 +25,7 @@ export interface IconProps extends React.SVGAttributes<SVGElement> {
 export type IconType = (props: IconProps) => React.ReactElement;
 
 export function Icon(props: IconProps): React.ReactElement {
-  const { size = "1em", title, className, icon, ...rest } = props;
+  const { size = "1em", title, icon, ...rest } = props;
   return (
     <svg
       stroke="currentColor"
@@ -33,7 +33,6 @@ export function Icon(props: IconProps): React.ReactElement {
       strokeWidth="0"
       {...icon.attr}
       {...rest}
-      className={className}
       style={{
         color: props.color,
         ...props.style,

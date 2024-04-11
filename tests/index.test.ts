@@ -29,5 +29,13 @@ pluginTester({
       import Icon from "react-icons/macro";
       <Icon icon={process.env.TEST ? "FcAcceptDatabase" : "FcAddDatabase"} />;
     `,
+    /* jsx */ `
+      import Icon from "react-icons/macro";
+      const Save = Icon.of("BiSave");
+    `,
+    /* jsx */ `
+      import Icon from "react-icons/macro";
+      const Save = Icon.of("BiSave", { fontSize: "2em" });
+    `,
   ],
 });

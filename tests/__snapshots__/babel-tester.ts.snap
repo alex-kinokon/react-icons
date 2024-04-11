@@ -32,3 +32,33 @@ import {
 <_Icon icon={process.env.TEST ? _FcAcceptDatabase : _FcAddDatabase} />;
 "
 `;
+
+exports[`macros 3. macros: 3. macros 1`] = `
+"
+
+import Icon from "react-icons/macro";
+const Save = Icon.of("BiSave");
+    
+
+      ↓ ↓ ↓ ↓ ↓ ↓
+
+import { Icon as _Icon } from "react-icons";
+import { BiSave as _BiSave } from "react-icons/icons/bi";
+const Save = props => <_Icon icon={_BiSave} {...props} />;
+"
+`;
+
+exports[`macros 4. macros: 4. macros 1`] = `
+"
+
+import Icon from "react-icons/macro";
+const Save = Icon.of("BiSave", { fontSize: "2em" });
+    
+
+      ↓ ↓ ↓ ↓ ↓ ↓
+
+import { Icon as _Icon } from "react-icons";
+import { BiSave as _BiSave } from "react-icons/icons/bi";
+const Save = props => <_Icon icon={_BiSave} fontSize="2em" {...props} />;
+"
+`;
