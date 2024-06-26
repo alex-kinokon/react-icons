@@ -12,3 +12,5 @@ echo "📀 Copying package.json..."
 jq 'del(.devDependencies, .private)' package.json > dist/package.json
 echo "📀 Running dts-bundle-generator..."
 npx dts-bundle-generator --project tsconfig.json --out-file dist/index.d.ts ./src/index.tsx --no-check
+echo "📀 Building website"
+(cd website && npx vite build)
